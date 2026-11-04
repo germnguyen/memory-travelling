@@ -7,55 +7,50 @@
 
 ## 1. Thông Tin Chung
 * **Dự án**: Memory Travelling (Nền tảng lưu giữ & chia sẻ kỷ niệm du lịch theo bản đồ Việt Nam).
+* **Git Branch**: `feature/foundation-core` (nhánh nền tảng kiến trúc lõi).
 * **Tech Stack**:
   * **Frontend**: React 19, TypeScript, Tailwind CSS v4, GSAP, Vite.
-  * **Backend**: Java 21, Spring Boot, Spring Security (JWT), Spring Data JPA, Hibernate Spatial.
-  * **Database**: PostgreSQL 16 + PostGIS Extension.
-  * **Cache & Storage**: Redis 7 Alpine (Cache & Session/RateLimit), MinIO / S3 (Object Storage cho ảnh/video).
+  * **Backend**: Java 21, Spring Boot (v4.1.1), Spring Security, Spring Data JPA, Hibernate Spatial 7.
+  * **Database**: PostgreSQL 16 + PostGIS 3.4 Extension.
+  * **Cache & Storage**: Redis 7 Alpine, MinIO Object Storage (tương thích AWS S3).
   * **DevOps**: Docker, Docker Compose (Mô hình Hybrid Dev), Multi-stage Dockerfile.
 
 ---
 
-## 2. Các Quyết Định Kỹ Thuật Đã Thống Nhất (Technical Decisions)
-1. **Bảo Mật Nghiêm Ngặt Cho Kỷ Niệm Riêng Tư (Strict Ephemeral Pre-signed URLs)**:
+## 2. Quy Chuẩn Làm Việc & Quyết Định Kỹ Thuật (Working Conventions)
+1. **Quy chuẩn Git**: Mỗi chức năng lớn (Phase) phát triển trên một branch riêng (`feature/<feature-name>`); mỗi task kỹ thuật được kiểm thử độc lập (TDD) và commit riêng biệt (`git commit` per task).
+2. **Bảo Mật Nghiêm Ngặt Kỷ Niệm Riêng Tư (Strict Ephemeral Pre-signed URLs)**:
    * Ảnh/video của kỷ niệm `PRIVATE` được lưu trong Private Storage.
-   * Khi chủ sở hữu truy cập, Backend sinh Pre-signed GET URL có thời hạn ngắn (15–30 phút) bằng thuật toán HMAC-SHA256 cục bộ (<0.1ms, không phát sinh I/O mạng tới MinIO). Ngăn ngừa rò rỉ link công khai.
-2. **Chuẩn Hoá Danh Mục 63 Tỉnh/Thành & Không Gian Địa Lý (PostGIS Spatial Indexing)**:
-   * Nạp sẵn master data 63 tỉnh/thành Việt Nam kèm toạ độ và ranh giới. Khi ghim toạ độ, PostGIS tự động ánh xạ để phục vụ Bảng xếp hạng (Leaderboard) và thống kê check-in chuẩn xác 100%.
-3. **Pipeline Xử Lý Media Tại Client**:
+   * Backend sinh Pre-signed GET URL có thời hạn ngắn (15–30 phút) bằng thuật toán HMAC-SHA256 cục bộ (<0.1ms, zero network I/O tới MinIO).
+3. **Master Data 63 Tỉnh/Thành & Không Gian Địa Lý (PostGIS Spatial Indexing)**:
+   * Nạp sẵn danh mục 63 tỉnh/thành Việt Nam kèm toạ độ và ranh giới. Tự động liên kết địa danh phục vụ Bảng xếp hạng và thống kê chuẩn xác 100%.
+4. **Pipeline Xử Lý Media Tại Client**:
    * Trình duyệt tự đọc EXIF GPS từ ảnh để gợi ý điểm ghim tức thì.
-   * Client tự nén ảnh thu nhỏ (thumbnail WebP) qua Canvas trước khi tải lên, server không cần gánh worker FFmpeg hay xử lý ảnh nặng.
-4. **Phân Cụm Bản Đồ Nhẹ Tải (Client Clustering with Supercluster)**:
+   * Client tự nén ảnh thu nhỏ (thumbnail WebP) qua Canvas trước khi tải lên, server không cần gánh worker FFmpeg nặng.
+5. **Phân Cụm Bản Đồ Nhẹ Tải (Client Clustering with Supercluster)**:
    * Backend chỉ truy vấn bounding box qua PostGIS GIST index; Frontend chịu trách nhiệm gom cụm marker ở 60 FPS.
-5. **Quy Trình Phát Triển Tối Ưu (Hybrid Dev -> Production Packaging)**:
-   * *Local Dev*: `docker-compose.dev.yml` chỉ chạy PostgreSQL (PostGIS), Redis, MinIO. Backend Spring Boot và Frontend Vite chạy trực tiếp trên máy host.
-   * *Production*: Đóng gói Multi-stage Dockerfile cho Backend (JRE 21 Alpine) và Frontend (Nginx Alpine).
-6. **Hệ Thống Tài Liệu**:
-   * `docs/superpowers/specs/2026-11-04-memory-travelling-system-design.md`: Bản thiết kế kiến trúc chuẩn & SRS.
-   * `docs/superpowers/plans/2026-11-04-foundation-and-core-architecture.md`: Kế hoạch thực thi chi tiết (TDD Implementation Plan) gồm 6 tasks.
-   * `PROJECT_LOG.md`: Nhật ký tiến trình cập nhật sau mỗi phiên làm việc.
+6. **Quy Trình Phát Triển Tối Ưu (Hybrid Dev)**:
+   * *Local Dev*: `docker-compose.dev.yml` chạy ngầm PostgreSQL (PostGIS), Redis, MinIO. Backend Spring Boot và Frontend Vite chạy trực tiếp trên máy host.
 
 ---
 
 ## 3. Trạng Thái Hiện Tại (Current Status)
-* **Ngày bắt đầu**: 2026-11-04
-* **Giai đoạn**: **Phase 1 — Project Foundation & Core Architecture**
-* **Đã hoàn thành**:
-  * [x] Khảo sát hiện trạng codebase (Frontend Vite/React UI tĩnh, Backend Spring Boot khởi tạo rỗng).
-  * [x] Soạn thảo Bản thiết kế kiến trúc hệ thống chuẩn & Đặc tả yêu cầu chức năng (SRS) tại `docs/superpowers/specs/2026-11-04-memory-travelling-system-design.md`.
-  * [x] Thẩm định kiến trúc độc lập (Builder Check) và chốt phương án bảo mật nghiêm ngặt.
-  * [x] Người dùng chính thức phê duyệt Bản thiết kế kiến trúc.
-  * [x] Lập Kế hoạch thực thi chi tiết (Implementation Plan) tại `docs/superpowers/plans/2026-11-04-foundation-and-core-architecture.md`.
-* **Đang tiến hành**:
-  * [ ] Xác nhận lựa chọn phương thức thực thi (Subagent-driven vs Native).
-  * [ ] Bắt tay vào thực thi Task 1: Thiết lập `docker-compose.dev.yml`.
+* **Giai đoạn**: **Phase 1 — Project Foundation & Core Architecture** (ĐÃ HOÀN TẤT 100%)
+* **Lịch sử Commit trên nhánh `feature/foundation-core`**:
+  * `a42ebac`: `docs: add system design specification, SRS, and implementation plan`
+  * `9929f77`: `chore(infra): setup hybrid dev infrastructure with postgres, postgis, redis and minio` (Task 1)
+  * `414eced`: `feat(backend): configure PostgreSQL PostGIS datasource and spatial dialect` (Task 2)
+  * `5a94153`: `feat(backend): implement Province entity, repository, and seed 63 Vietnam provinces` (Task 3)
+  * `a4eeddc`: `feat(backend): implement core entities (User, Location, Memory, Media, Album) and spatial repositories` (Task 4)
+  * `45d47d3`: `feat(backend): implement MinIO storage service with presigned PUT and ephemeral GET urls` (Task 5)
+  * `7e21f13`: `feat(frontend): setup API client, storage direct-upload service, and synchronized domain models` (Task 6)
 
 ---
 
-## 4. Kế Hoạch Đầu Việc Tiếp Theo (Next Actions)
-* **Task 1**: Thiết lập Docker Compose hạ tầng cục bộ (`docker-compose.dev.yml` cho Postgres/PostGIS, Redis, MinIO).
-* **Task 2**: Cấu hình Spring Boot DataSource & Hibernate Spatial.
-* **Task 3**: Master Data: Nạp danh mục 63 tỉnh/thành Việt Nam vào Database.
-* **Task 4**: Xây dựng Tầng Entity cốt lõi (`User`, `Location`, `Memory`, `Media`, `Album`).
-* **Task 5**: Triển khai Dịch vụ lưu trữ MinIO & sinh Pre-signed URL tạm thời (Strict Security).
-* **Task 6**: Chuẩn hoá Frontend API Client & đồng bộ Domain Types.
+## 4. Kế Hoạch Đầu Việc Cho Phiên Kế Tiếp (Next Phase)
+* **Chức năng tiếp theo**: **Phase 2 — Xác thực & Phân quyền (Authentication & JWT Security)**
+  * Nhánh mới: `feature/auth-jwt-security`
+  * [ ] Task 2.1: Triển khai JWT Token Provider & Spring Security Filter Chain.
+  * [ ] Task 2.2: API Đăng ký (`/api/v1/auth/register`) & Đăng nhập (`/api/v1/auth/login`).
+  * [ ] Task 2.3: API Lấy thông tin tài khoản hiện tại (`/api/v1/auth/me`).
+  * [ ] Task 2.4: Giao diện Đăng nhập / Đăng ký Modal trên Frontend & Lưu trữ Token an toàn.
