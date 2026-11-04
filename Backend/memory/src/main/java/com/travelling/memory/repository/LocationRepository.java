@@ -1,0 +1,20 @@
+package com.travelling.memory.repository;
+
+import com.travelling.memory.domain.Location;
+import org.locationtech.jts.geom.Geometry;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface LocationRepository extends JpaRepository<Location, UUID> {
+    List<Location> findByProvinceId(Integer provinceId);
+
+    @Query("SELECT l FROM Location l WHERE within(l.coordinates, :bbox) = true")
+    List<Location> findWithinBoundingBox(@Param("bbox") Geometry bbox);
+}
+
