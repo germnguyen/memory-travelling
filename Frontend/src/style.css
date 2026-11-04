@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand: #ff4d1a;
+  --color-brand-hover: #e03d0d;
+  --font-sans: "Inter Variable", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.perspective-900 {
+  perspective: 900px;
+}
+
+.will-change-transform {
+  will-change: transform, opacity;
+}
