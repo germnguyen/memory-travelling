@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import gsap from "gsap";
+import { AuthProvider } from "./context/AuthContext";
+import { AuthModal } from "./components/auth/AuthModal";
 import { Intro } from "./components/Intro";
 import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/Hero";
@@ -9,7 +11,7 @@ import { Footer } from "./components/Footer";
 
 const INTRO_STORAGE_KEY = "memory-travelling-intro-seen";
 
-export const App: React.FC = () => {
+const MainLayout: React.FC = () => {
   const [showIntro, setShowIntro] = useState<boolean>(() => {
     // Force show if URL has ?intro
     if (typeof window !== "undefined" && window.location.search.includes("intro")) {
@@ -152,7 +154,18 @@ export const App: React.FC = () => {
 
       {/* Footer */}
       <Footer />
+
+      {/* Global Auth Modal */}
+      <AuthModal />
     </div>
+  );
+};
+
+export const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <MainLayout />
+    </AuthProvider>
   );
 };
 

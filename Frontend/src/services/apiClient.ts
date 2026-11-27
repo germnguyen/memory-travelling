@@ -28,6 +28,11 @@ export async function apiRequest<T>(
   });
 
   if (!response.ok) {
+    if (response.status === 401 && typeof window !== "undefined") {
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("auth_user");
+      window.dispatchEvent(new CustomEvent("auth:unauthorized"));
+    }
     let errorMsg = `HTTP Error ${response.status}`;
     try {
       const errJson = await response.json();

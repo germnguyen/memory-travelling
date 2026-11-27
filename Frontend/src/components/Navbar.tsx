@@ -1,10 +1,34 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
 
 interface NavbarProps {
   onReplayIntro: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onReplayIntro }) => {
+  const { user, isAuthenticated, logout, openAuthModal } = useAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    if (isMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isMenuOpen]);
+
+  const userInitial = user?.fullName
+    ? user.fullName.trim().charAt(0).toUpperCase()
+    : "U";
+
   return (
     <div className="fixed inset-x-0 top-4 z-50 px-4 pointer-events-none">
       <header
@@ -62,6 +86,63 @@ export const Navbar: React.FC<NavbarProps> = ({ onReplayIntro }) => {
             <span>Ghim kỷ niệm</span>
             <span className="text-xs">→</span>
           </a>
+
+          {/* Auth State Button / Profile */}
+          {isAuthenticated && user ? (
+            <div className="relative" ref={menuRef}>
+              <button
+                type="button"
+                onClick={() => setIsMenuOpen((prev) => !prev)}
+                className="flex items-center gap-2 rounded-full bg-white/10 hover:bg-white/20 pl-1 pr-2.5 py-1 text-xs font-medium text-white transition focus:outline-none focus:ring-1 focus:ring-[#ff4d1a]"
+                title={user.fullName}
+              >
+                {user.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.fullName}
+                    className="h-6 w-6 rounded-full object-cover border border-white/20"
+                  />
+                ) : (
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-tr from-[#ff4d1a] to-[#ff8c42] text-[11px] font-bold text-white shadow-sm">
+                    {userInitial}
+                  </span>
+                )}
+                <span className="max-w-[90px] truncate hidden sm:inline-block">
+                  {user.fullName}
+                </span>
+                <span className="text-[10px] text-white/60">▼</span>
+              </button>
+
+              {/* Dropdown Menu */}
+              {isMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 rounded-xl bg-[#181818]/95 border border-white/10 py-1.5 shadow-2xl backdrop-blur-xl text-xs z-50">
+                  <div className="px-3 py-2 border-b border-white/10">
+                    <p className="font-semibold text-white truncate">{user.fullName}</p>
+                    <p className="text-[11px] text-white/50 truncate">{user.email}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      logout();
+                    }}
+                    className="w-full text-left px-3 py-2 text-red-400 hover:text-red-300 hover:bg-white/5 transition flex items-center gap-2"
+                  >
+                    <span>⏻</span>
+                    <span>Đăng xuất</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => openAuthModal("login")}
+              className="inline-flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 px-3 py-1.5 text-xs font-medium text-white transition active:scale-[0.98]"
+            >
+              Đăng nhập
+            </button>
+          )}
         </div>
       </header>
     </div>

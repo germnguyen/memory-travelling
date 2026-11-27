@@ -85,6 +85,33 @@ export interface ApiResponse<T> {
   timestamp: string;
 }
 
+export interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  avatarUrl?: string;
+  role: string;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
+  user: User;
+}
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterData {
+  email: string;
+  password: string;
+  fullName: string;
+  avatarUrl?: string;
+}
+
 // UI Showcase types (Preserved for backward compatibility)
 export interface PhotoCard {
   src: string;

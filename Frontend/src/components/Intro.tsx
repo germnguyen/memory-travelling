@@ -55,6 +55,7 @@ export const Intro: React.FC<IntroProps> = ({ photos = DEFAULT_PHOTOS, onDone })
     // Respect user's motion preference
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       onDone();
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsRemoved(true);
       return;
     }
