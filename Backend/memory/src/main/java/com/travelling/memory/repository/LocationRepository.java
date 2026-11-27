@@ -19,4 +19,7 @@ public interface LocationRepository extends JpaRepository<Location, UUID> {
 
     @Query(value = "SELECT l.* FROM locations l WHERE ST_Intersects(l.coordinates, ST_MakeEnvelope(:minLng, :minLat, :maxLng, :maxLat, 4326))", nativeQuery = true)
     List<Location> findInBoundingBox(@Param("minLng") double minLng, @Param("minLat") double minLat, @Param("maxLng") double maxLng, @Param("maxLat") double maxLat);
+
+    @Query("SELECT l FROM Location l LEFT JOIN FETCH l.province WHERE l.id IN :ids")
+    List<Location> findAllByIdInWithProvince(@Param("ids") java.util.Collection<UUID> ids);
 }
