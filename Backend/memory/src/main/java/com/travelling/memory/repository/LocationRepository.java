@@ -16,5 +16,7 @@ public interface LocationRepository extends JpaRepository<Location, UUID> {
 
     @Query("SELECT l FROM Location l WHERE within(l.coordinates, :bbox) = true")
     List<Location> findWithinBoundingBox(@Param("bbox") Geometry bbox);
-}
 
+    @Query(value = "SELECT l.* FROM locations l WHERE ST_Intersects(l.coordinates, ST_MakeEnvelope(:minLng, :minLat, :maxLng, :maxLat, 4326))", nativeQuery = true)
+    List<Location> findInBoundingBox(@Param("minLng") double minLng, @Param("minLat") double minLat, @Param("maxLng") double maxLng, @Param("maxLat") double maxLat);
+}
