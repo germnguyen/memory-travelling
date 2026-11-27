@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import type { MapMarkerPoint, MemoryMapMarkerResponse, BoundingBoxQuery } from "../types";
 import { MapLibreMap } from "./map/MapLibreMap";
 import { memoryService } from "../services/memoryService";
@@ -252,12 +252,14 @@ export const MapShowcase: React.FC = () => {
   const [selectedCoords, setSelectedCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [isPinMode, setIsPinMode] = useState<boolean>(false);
   const [activeVectorMarker, setActiveVectorMarker] = useState<MemoryMapMarkerResponse>(SAMPLE_MAP_MARKERS[2]);
+  const lastRequestIdRef = useRef<number>(0);
 
-  // Load initial backend markers or fallback
+  // Load backend markers or fallback with request tracking to avoid race conditions
   const fetchMarkersInBounds = useCallback(async (bbox: BoundingBoxQuery) => {
+    const requestId = ++lastRequestIdRef.current;
     try {
       const data = await memoryService.getMapMarkers(bbox);
-      if (data && data.length > 0) {
+      if (requestId === lastRequestIdRef.current && data && data.length > 0) {
         setMapMarkers(data);
       }
     } catch {
@@ -381,7 +383,7 @@ export const MapShowcase: React.FC = () => {
               {/* MapLibre WebGL Viewport */}
               <div className="min-h-[480px] h-[520px] rounded-3xl overflow-hidden border border-neutral-200 shadow-inner bg-neutral-50">
                 <MapLibreMap
-                  initialMarkers={mapMarkers}
+                  markers={mapMarkers}
                   onBoundsChange={handleBoundsChange}
                   onLocationSelect={handleLocationSelect}
                   selectedCoords={selectedCoords}

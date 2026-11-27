@@ -14,6 +14,7 @@ import type { ClusterProperties } from "supercluster";
 import type { MemoryMapMarkerResponse } from "../../types";
 
 export interface MapLibreMapProps {
+  markers?: MemoryMapMarkerResponse[];
   initialMarkers?: MemoryMapMarkerResponse[];
   onBoundsChange?: (bounds: {
     minLng: number;
@@ -71,6 +72,7 @@ function isClusterFeature(
 
 function isSafeImageUrl(url?: string): boolean {
   if (!url || typeof url !== "string") return false;
+  if (url.startsWith("data:image/")) return true;
   try {
     const parsed = new URL(url, window.location.origin);
     return parsed.protocol === "http:" || parsed.protocol === "https:";
@@ -80,6 +82,7 @@ function isSafeImageUrl(url?: string): boolean {
 }
 
 export const MapLibreMap: React.FC<MapLibreMapProps> = ({
+  markers,
   initialMarkers = [],
   onBoundsChange,
   onLocationSelect,
@@ -88,6 +91,7 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
   className = "w-full h-full min-h-[460px]",
   onMarkerClick,
 }) => {
+  const effectiveMarkers = markers ?? initialMarkers;
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<Map | null>(null);
   const activeMarkersRef = useRef<Marker[]>([]);
@@ -101,7 +105,7 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
 
   // Client-side clustering with Supercluster
   const { clusters, getClusterExpansionZoom } = useMapCluster(
-    initialMarkers,
+    effectiveMarkers,
     mapBounds,
     mapZoom,
     { radius: 55, maxZoom: 16, minPoints: 2 }
