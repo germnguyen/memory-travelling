@@ -1,5 +1,5 @@
 import { apiRequest } from "./apiClient";
-import type { Memory, BoundingBoxQuery } from "../types";
+import type { Memory, BoundingBoxQuery, MemoryMapMarkerResponse } from "../types";
 
 export interface CreateMemoryPayload {
   title: string;
@@ -14,6 +14,16 @@ export interface CreateMemoryPayload {
 }
 
 export const memoryService = {
+  async getMapMarkers(bbox: BoundingBoxQuery): Promise<MemoryMapMarkerResponse[]> {
+    const params = new URLSearchParams({
+      minLng: bbox.minLng.toString(),
+      minLat: bbox.minLat.toString(),
+      maxLng: bbox.maxLng.toString(),
+      maxLat: bbox.maxLat.toString(),
+    });
+    return apiRequest<MemoryMapMarkerResponse[]>(`/memories/map?${params.toString()}`);
+  },
+
   async getMemoriesInBounds(bbox: BoundingBoxQuery): Promise<Memory[]> {
     const params = new URLSearchParams({
       minLng: bbox.minLng.toString(),
