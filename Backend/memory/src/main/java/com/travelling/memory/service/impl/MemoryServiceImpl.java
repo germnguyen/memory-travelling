@@ -111,6 +111,10 @@ public class MemoryServiceImpl implements MemoryService {
             double maxLat,
             UUID currentUserIdOrNull
     ) {
+        if (minLng > maxLng || minLat > maxLat || minLat < -90.0 || maxLat > 90.0 || minLng < -180.0 || maxLng > 180.0) {
+            throw new IllegalArgumentException("Invalid bounding box coordinates: minLng must be <= maxLng, minLat must be <= maxLat, latitude in [-90, 90], longitude in [-180, 180]");
+        }
+
         List<Memory> memories;
         if (currentUserIdOrNull != null) {
             memories = memoryRepository.findMemoriesInBoundingBoxForUser(minLng, minLat, maxLng, maxLat, currentUserIdOrNull);
