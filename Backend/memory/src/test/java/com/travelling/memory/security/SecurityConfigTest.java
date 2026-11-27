@@ -23,4 +23,20 @@ class SecurityConfigTest {
         assertThat(passwordEncoder.matches(rawPassword, encoded)).isTrue();
         assertThat(passwordEncoder.matches("wrongPassword", encoded)).isFalse();
     }
+
+    @Test
+    @DisplayName("Should configure CORS correctly for frontend localhost:5173")
+    void shouldConfigureCorsCorrectly() {
+        org.springframework.web.cors.CorsConfigurationSource source = securityConfig.corsConfigurationSource();
+        org.springframework.mock.web.MockHttpServletRequest request = new org.springframework.mock.web.MockHttpServletRequest();
+        request.setRequestURI("/api/v1/memories");
+
+        org.springframework.web.cors.CorsConfiguration config = source.getCorsConfiguration(request);
+
+        assertThat(config).isNotNull();
+        assertThat(config.getAllowedOrigins()).containsExactly("http://localhost:5173");
+        assertThat(config.getAllowedMethods()).containsExactlyInAnyOrder("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS");
+        assertThat(config.getAllowedHeaders()).containsExactly("*");
+        assertThat(config.getAllowCredentials()).isTrue();
+    }
 }
