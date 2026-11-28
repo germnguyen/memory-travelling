@@ -1,16 +1,30 @@
 import { apiRequest } from "./apiClient";
 import type { Memory, BoundingBoxQuery, MemoryMapMarkerResponse } from "../types";
 
+export interface CreateMediaPayload {
+  storageKey: string;
+  mediaType: "IMAGE" | "VIDEO";
+  fileSize?: number;
+  thumbnailKey?: string;
+  width?: number;
+  height?: number;
+  durationSeconds?: number;
+  orderIndex?: number;
+}
+
 export interface CreateMemoryPayload {
   title: string;
   description?: string;
   visitedAt: string;
   visibility: "PRIVATE" | "UNLISTED" | "PUBLIC";
   locationName: string;
-  provinceId: number;
+  provinceId?: number;
+  district?: string;
+  commune?: string;
   latitude: number;
   longitude: number;
-  mediaKeys: string[];
+  mediaList?: CreateMediaPayload[];
+  mediaKeys?: string[];
 }
 
 export const memoryService = {

@@ -240,7 +240,11 @@ const SAMPLE_MAP_MARKERS: MemoryMapMarkerResponse[] = [
 
 type MapMode = "maplibre" | "svg";
 
-export const MapShowcase: React.FC = () => {
+export interface MapShowcaseProps {
+  onLocationSelect?: (coords: { latitude: number; longitude: number }) => void;
+}
+
+export const MapShowcase: React.FC<MapShowcaseProps> = ({ onLocationSelect }) => {
   // Mode selection: MapLibre Vector Map vs Artistic SVG Map
   const [mapMode, setMapMode] = useState<MapMode>("maplibre");
 

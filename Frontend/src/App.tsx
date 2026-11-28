@@ -8,10 +8,13 @@ import { Hero } from "./components/Hero";
 import { MapShowcase } from "./components/MapShowcase";
 import { DestinationLeaderboard } from "./components/DestinationLeaderboard";
 import { Footer } from "./components/Footer";
+import { CreateMemoryModal } from "./components/memory/CreateMemoryModal";
 
 const INTRO_STORAGE_KEY = "memory-travelling-intro-seen";
 
 const MainLayout: React.FC = () => {
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedCoords, setSelectedCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [showIntro, setShowIntro] = useState<boolean>(() => {
     // Force show if URL has ?intro
     if (typeof window !== "undefined" && window.location.search.includes("intro")) {
@@ -131,7 +134,10 @@ const MainLayout: React.FC = () => {
       {showIntro && <Intro onDone={handleIntroDone} />}
 
       {/* Floating Pill Navigation */}
-      <Navbar onReplayIntro={handleReplayIntro} />
+      <Navbar
+        onReplayIntro={handleReplayIntro}
+        onOpenCreateMemory={() => setIsCreateModalOpen(true)}
+      />
 
       {/* Main Content */}
       <main>
@@ -143,10 +149,16 @@ const MainLayout: React.FC = () => {
               mapElem.scrollIntoView({ behavior: "smooth" });
             }
           }}
+          onOpenCreateMemory={() => setIsCreateModalOpen(true)}
         />
 
         {/* Vietnam Map Showcase */}
-        <MapShowcase />
+        <MapShowcase
+          onLocationSelect={(coords) => {
+            setSelectedCoords(coords);
+            setIsCreateModalOpen(true);
+          }}
+        />
 
         {/* Destination Leaderboard / Voting */}
         <DestinationLeaderboard />
@@ -157,6 +169,20 @@ const MainLayout: React.FC = () => {
 
       {/* Global Auth Modal */}
       <AuthModal />
+
+      {/* Create Memory Modal */}
+      <CreateMemoryModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        initialCoords={selectedCoords}
+        onSuccess={() => {
+          setIsCreateModalOpen(false);
+          const mapElem = document.getElementById("map");
+          if (mapElem) {
+            mapElem.scrollIntoView({ behavior: "smooth" });
+          }
+        }}
+      />
     </div>
   );
 };

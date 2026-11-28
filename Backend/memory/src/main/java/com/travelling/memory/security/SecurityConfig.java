@@ -92,6 +92,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/memories/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/memories/**").authenticated()
+                        .requestMatchers("/api/v1/storage/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

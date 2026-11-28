@@ -2,9 +2,10 @@ import React from "react";
 
 interface HeroProps {
   onExploreClick: () => void;
+  onOpenCreateMemory?: () => void;
 }
 
-export const Hero: React.FC<HeroProps> = ({ onExploreClick }) => {
+export const Hero: React.FC<HeroProps> = ({ onExploreClick, onOpenCreateMemory }) => {
   const voters = [
     "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80",
     "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80",
@@ -40,7 +41,7 @@ export const Hero: React.FC<HeroProps> = ({ onExploreClick }) => {
       <div data-hero className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <button
           type="button"
-          onClick={onExploreClick}
+          onClick={onOpenCreateMemory || onExploreClick}
           className="inline-flex items-center justify-center gap-2 rounded-full bg-[#ff4d1a] px-7 py-3.5 text-base font-bold text-white shadow-lg shadow-[#ff4d1a]/25 transition hover:bg-[#e03d0d] hover:shadow-xl active:scale-[0.98]"
         >
           <span>Ghim kỷ niệm của bạn</span>

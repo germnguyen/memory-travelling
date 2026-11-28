@@ -3,9 +3,10 @@ import { useAuth } from "../context/AuthContext";
 
 interface NavbarProps {
   onReplayIntro: () => void;
+  onOpenCreateMemoryModal?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onReplayIntro }) => {
+export const Navbar: React.FC<NavbarProps> = ({ onReplayIntro, onOpenCreateMemoryModal }) => {
   const { user, isAuthenticated, logout, openAuthModal } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -79,13 +80,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onReplayIntro }) => {
             <span className="hidden lg:inline-block">Intro</span>
           </button>
 
-          <a
-            href="#map"
+          <button
+            type="button"
+            onClick={onOpenCreateMemoryModal}
             className="inline-flex items-center justify-center gap-1.5 rounded-full bg-[#ff4d1a] px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#e03d0d] active:scale-[0.98]"
           >
             <span>Ghim kỷ niệm</span>
             <span className="text-xs">→</span>
-          </a>
+          </button>
 
           {/* Auth State Button / Profile */}
           {isAuthenticated && user ? (
