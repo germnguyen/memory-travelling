@@ -107,7 +107,7 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
 
   // Smooth camera navigation when flyToCoords changes
   useEffect(() => {
-    if (flyToCoords && mapRef.current) {
+    if (flyToCoords && mapRef.current && isMapLoaded) {
       mapRef.current.flyTo({
         center: [flyToCoords.longitude, flyToCoords.latitude],
         zoom: flyToCoords.zoom ?? 12,
@@ -115,7 +115,7 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
         essential: true,
       });
     }
-  }, [flyToCoords]);
+  }, [flyToCoords, isMapLoaded]);
 
   // Client-side clustering with Supercluster
   const { clusters, getClusterExpansionZoom } = useMapCluster(

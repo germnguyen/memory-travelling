@@ -16,7 +16,7 @@ const INTRO_STORAGE_KEY = "memory-travelling-intro-seen";
 const MainLayout: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedCoords, setSelectedCoords] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [createdMemory, setCreatedMemory] = useState<Memory | null>(null);
+  const [newlyCreatedMemory, setNewlyCreatedMemory] = useState<Memory | null>(null);
   const [showIntro, setShowIntro] = useState<boolean>(() => {
     // Force show if URL has ?intro
     if (typeof window !== "undefined" && window.location.search.includes("intro")) {
@@ -160,7 +160,7 @@ const MainLayout: React.FC = () => {
             setSelectedCoords(coords);
             setIsCreateModalOpen(true);
           }}
-          newlyCreatedMemory={createdMemory}
+          newlyCreatedMemory={newlyCreatedMemory}
         />
 
         {/* Destination Leaderboard / Voting */}
@@ -181,10 +181,10 @@ const MainLayout: React.FC = () => {
           setSelectedCoords(null);
         }}
         initialCoords={selectedCoords}
-        onSuccess={(memory) => {
+        onSuccess={(createdMemory) => {
           setIsCreateModalOpen(false);
           setSelectedCoords(null);
-          setCreatedMemory(memory);
+          setNewlyCreatedMemory(createdMemory);
           const mapElem = document.getElementById("map");
           if (mapElem) {
             mapElem.scrollIntoView({ behavior: "smooth" });

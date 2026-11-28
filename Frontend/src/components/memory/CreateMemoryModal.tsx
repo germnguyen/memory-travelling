@@ -262,13 +262,18 @@ export const CreateMemoryModal: React.FC<CreateMemoryModalProps> = ({
 
     try {
       const mediaList: CreateMediaPayload[] = [];
+      const N = mediaItems.length;
 
       // Upload each selected media file and its WebP thumbnail directly to MinIO/S3
-      for (let i = 0; i < mediaItems.length; i++) {
+      for (let i = 0; i < N; i++) {
         const item = mediaItems[i];
         const file = item.file;
 
-        setStatusMessage(`Đang tải ảnh ${i + 1}/${mediaItems.length}: ${file.name}...`);
+        setStatusMessage(`Đang tải ảnh ${i + 1}/${N}: ${file.name}...`);
+
+        const baseForI = (i * 90) / N;
+        const originalWeight = 50 / N;
+        const thumbnailWeight = 40 / N;
 
         // 1. Request presigned upload URL for original image
         const originalPresigned = await storageService.requestPresignedUrl({
@@ -277,18 +282,20 @@ export const CreateMemoryModal: React.FC<CreateMemoryModalProps> = ({
           fileSize: file.size,
         });
 
-        // 2. Direct PUT upload to storage
+        // 2. Direct PUT upload to storage (contributes up to 50% / N)
         await storageService.uploadDirect(
           originalPresigned.uploadUrl,
           file,
           file.type || "image/jpeg",
           (percent) => {
-            const overall = Math.round(((i * 2 + percent / 100) / (mediaItems.length * 2)) * 85);
-            setUploadProgress(overall);
+            const current = baseForI + (percent / 100) * originalWeight;
+            setUploadProgress(Math.min(90, Math.round(current)));
           }
         );
 
-        // 3. Compress & upload WebP thumbnail
+        setUploadProgress(Math.round(baseForI + originalWeight));
+
+        // 3. Compress & upload WebP thumbnail (contributes up to 40% / N)
         let thumbnailKey: string | undefined;
         try {
           const thumb = item.thumbnail || (await createWebpThumbnail(file, 400, 0.8));
@@ -303,14 +310,20 @@ export const CreateMemoryModal: React.FC<CreateMemoryModalProps> = ({
           await storageService.uploadDirect(
             thumbPresigned.uploadUrl,
             thumb.blob,
-            "image/webp"
+            "image/webp",
+            (percent) => {
+              const current = baseForI + originalWeight + (percent / 100) * thumbnailWeight;
+              setUploadProgress(Math.min(90, Math.round(current)));
+            }
           );
 
           thumbnailKey = thumbPresigned.storageKey;
-          setUploadProgress(Math.round(((i * 2 + 2) / (mediaItems.length * 2)) * 85));
         } catch (thumbErr) {
           console.warn("Thumbnail upload skipped due to error:", thumbErr);
         }
+
+        // Set progress after file i finishes (baseForI + originalWeight + thumbnailWeight = (i+1)*90/N)
+        setUploadProgress(Math.round(((i + 1) * 90) / N));
 
         mediaList.push({
           storageKey: originalPresigned.storageKey,
@@ -323,9 +336,16 @@ export const CreateMemoryModal: React.FC<CreateMemoryModalProps> = ({
         });
       }
 
-      // 4. Submit memory payload to Backend API
+      if (N === 0) {
+        setUploadProgress(10);
+      } else {
+        setUploadProgress(90);
+      }
+
+      // 4. Submit memory payload to Backend API (completes final 10%)
       setStatusMessage("Đang lưu thông tin kỷ niệm...");
-      setUploadProgress(92);
+      setUploadProgress(95);
+
       const createdMemory = await memoryService.createMemory({
         title: title.trim(),
         description: description.trim() || undefined,
@@ -339,6 +359,7 @@ export const CreateMemoryModal: React.FC<CreateMemoryModalProps> = ({
 
       setStatusMessage("Tạo kỷ niệm thành công!");
       setUploadProgress(100);
+
       if (onSuccess) {
         onSuccess(createdMemory);
       }
