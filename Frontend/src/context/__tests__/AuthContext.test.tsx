@@ -1,4 +1,5 @@
 import React from "react";
+import { describe, it, expect } from "vitest";
 import { AuthProvider, useAuth } from "../AuthContext";
 import type { User, AuthResponse } from "../../types";
 
@@ -54,3 +55,10 @@ export const runAuthContextVerifications = (): { passed: boolean; message: strin
 
   return { passed: true, message: "All AuthContext contracts validated successfully" };
 };
+
+describe("AuthContext", () => {
+  it("validates context contracts and render structure", () => {
+    const result = runAuthContextVerifications();
+    expect(result.passed).toBe(true);
+  });
+});

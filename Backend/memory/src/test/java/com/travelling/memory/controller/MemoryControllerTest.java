@@ -276,6 +276,41 @@ class MemoryControllerTest {
     }
 
     @Test
+    @DisplayName("POST /api/v1/memories should return 400 Bad Request when coordinates are out of range")
+    void shouldReturnBadRequestWhenCoordinatesOutOfRange() throws Exception {
+        String json = """
+                {
+                    "title": "Invalid Coordinates Memory",
+                    "visitedAt": "2026-10-10",
+                    "locationName": "Out of bounds",
+                    "latitude": 95.0,
+                    "longitude": 200.0
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/memories")
+                        .header("Authorization", "Bearer " + tokenA)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.latitude", containsString("Latitude must be between -90.0 and 90.0")))
+                .andExpect(jsonPath("$.errors.longitude", containsString("Longitude must be between -180.0 and 180.0")));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/memories/map should return 400 Bad Request when minLng > maxLng")
+    void shouldReturnBadRequestWhenBoundingBoxCoordinatesAreInvalid() throws Exception {
+        mockMvc.perform(get("/api/v1/memories/map")
+                        .param("minLng", "109.5")
+                        .param("minLat", "15.0")
+                        .param("maxLng", "107.0")
+                        .param("maxLat", "17.5"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error", is("Bad Request")))
+                .andExpect(jsonPath("$.message", containsString("Invalid bounding box coordinates")));
+    }
+
+    @Test
     @DisplayName("GET /api/v1/memories/map should return only PUBLIC memories in bounding box for unauthenticated guest")
     void shouldReturnOnlyPublicMemoriesInBoundingBoxForGuest() throws Exception {
         mockMvc.perform(get("/api/v1/memories/map")

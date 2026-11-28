@@ -9,6 +9,11 @@ export const storageService = {
     });
   },
 
+  // Alias for getPresignedUploadUrl
+  async requestPresignedUrl(req: PresignedUploadRequest): Promise<PresignedUploadResponse> {
+    return this.getPresignedUploadUrl(req);
+  },
+
   async uploadFileToStorage(
     uploadUrl: string,
     file: File | Blob,
@@ -39,5 +44,15 @@ export const storageService = {
       xhr.onerror = () => reject(new Error("Storage direct upload network error"));
       xhr.send(file);
     });
+  },
+
+  // Alias for uploadFileToStorage
+  async uploadDirect(
+    uploadUrl: string,
+    file: File | Blob,
+    contentType: string,
+    onProgress?: (progress: number) => void
+  ): Promise<void> {
+    return this.uploadFileToStorage(uploadUrl, file, contentType, onProgress);
   },
 };

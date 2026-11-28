@@ -78,6 +78,19 @@ export interface BoundingBoxQuery {
   maxLat: number;
 }
 
+export interface MemoryMapMarkerResponse {
+  memoryId: string;
+  locationId?: string;
+  title: string;
+  latitude: number;
+  longitude: number;
+  provinceName?: string;
+  coverThumbnailUrl?: string;
+  coverStorageKey?: string;
+  visitedAt: string;
+  visibility?: Visibility;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   message?: string;

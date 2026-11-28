@@ -1,5 +1,16 @@
 import { apiRequest } from "./apiClient";
-import type { Memory, BoundingBoxQuery } from "../types";
+import type { Memory, BoundingBoxQuery, MemoryMapMarkerResponse } from "../types";
+
+export interface CreateMediaPayload {
+  storageKey: string;
+  mediaType: "IMAGE" | "VIDEO";
+  fileSize?: number;
+  thumbnailKey?: string;
+  width?: number;
+  height?: number;
+  durationSeconds?: number;
+  orderIndex?: number;
+}
 
 export interface CreateMemoryPayload {
   title: string;
@@ -7,13 +18,26 @@ export interface CreateMemoryPayload {
   visitedAt: string;
   visibility: "PRIVATE" | "UNLISTED" | "PUBLIC";
   locationName: string;
-  provinceId: number;
+  provinceId?: number;
+  district?: string;
+  commune?: string;
   latitude: number;
   longitude: number;
-  mediaKeys: string[];
+  mediaList?: CreateMediaPayload[];
+  mediaKeys?: string[];
 }
 
 export const memoryService = {
+  async getMapMarkers(bbox: BoundingBoxQuery): Promise<MemoryMapMarkerResponse[]> {
+    const params = new URLSearchParams({
+      minLng: bbox.minLng.toString(),
+      minLat: bbox.minLat.toString(),
+      maxLng: bbox.maxLng.toString(),
+      maxLat: bbox.maxLat.toString(),
+    });
+    return apiRequest<MemoryMapMarkerResponse[]>(`/memories/map?${params.toString()}`);
+  },
+
   async getMemoriesInBounds(bbox: BoundingBoxQuery): Promise<Memory[]> {
     const params = new URLSearchParams({
       minLng: bbox.minLng.toString(),
