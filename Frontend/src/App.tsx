@@ -9,12 +9,14 @@ import { MapShowcase } from "./components/MapShowcase";
 import { DestinationLeaderboard } from "./components/DestinationLeaderboard";
 import { Footer } from "./components/Footer";
 import { CreateMemoryModal } from "./components/memory/CreateMemoryModal";
+import type { Memory } from "./types";
 
 const INTRO_STORAGE_KEY = "memory-travelling-intro-seen";
 
 const MainLayout: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedCoords, setSelectedCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [createdMemory, setCreatedMemory] = useState<Memory | null>(null);
   const [showIntro, setShowIntro] = useState<boolean>(() => {
     // Force show if URL has ?intro
     if (typeof window !== "undefined" && window.location.search.includes("intro")) {
@@ -158,6 +160,7 @@ const MainLayout: React.FC = () => {
             setSelectedCoords(coords);
             setIsCreateModalOpen(true);
           }}
+          newlyCreatedMemory={createdMemory}
         />
 
         {/* Destination Leaderboard / Voting */}
@@ -173,10 +176,15 @@ const MainLayout: React.FC = () => {
       {/* Create Memory Modal */}
       <CreateMemoryModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        initialCoords={selectedCoords}
-        onSuccess={() => {
+        onClose={() => {
           setIsCreateModalOpen(false);
+          setSelectedCoords(null);
+        }}
+        initialCoords={selectedCoords}
+        onSuccess={(memory) => {
+          setIsCreateModalOpen(false);
+          setSelectedCoords(null);
+          setCreatedMemory(memory);
           const mapElem = document.getElementById("map");
           if (mapElem) {
             mapElem.scrollIntoView({ behavior: "smooth" });

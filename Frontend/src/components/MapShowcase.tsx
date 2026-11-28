@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import type { MapMarkerPoint, MemoryMapMarkerResponse, BoundingBoxQuery } from "../types";
+import type { MapMarkerPoint, MemoryMapMarkerResponse, BoundingBoxQuery, Memory } from "../types";
 import { MapLibreMap } from "./map/MapLibreMap";
 import { memoryService } from "../services/memoryService";
 
@@ -242,9 +242,10 @@ type MapMode = "maplibre" | "svg";
 
 export interface MapShowcaseProps {
   onLocationSelect?: (coords: { latitude: number; longitude: number }) => void;
+  newlyCreatedMemory?: Memory | null;
 }
 
-export const MapShowcase: React.FC<MapShowcaseProps> = ({ onLocationSelect }) => {
+export const MapShowcase: React.FC<MapShowcaseProps> = ({ onLocationSelect, newlyCreatedMemory }) => {
   // Mode selection: MapLibre Vector Map vs Artistic SVG Map
   const [mapMode, setMapMode] = useState<MapMode>("maplibre");
 
@@ -256,7 +257,37 @@ export const MapShowcase: React.FC<MapShowcaseProps> = ({ onLocationSelect }) =>
   const [selectedCoords, setSelectedCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [isPinMode, setIsPinMode] = useState<boolean>(false);
   const [activeVectorMarker, setActiveVectorMarker] = useState<MemoryMapMarkerResponse>(SAMPLE_MAP_MARKERS[2]);
+  const [flyToCoords, setFlyToCoords] = useState<{ latitude: number; longitude: number; zoom?: number } | null>(null);
   const lastRequestIdRef = useRef<number>(0);
+
+  // Sync newly created memory to map markers and trigger camera flyTo
+  useEffect(() => {
+    if (newlyCreatedMemory && newlyCreatedMemory.location) {
+      const newMarker: MemoryMapMarkerResponse = {
+        memoryId: newlyCreatedMemory.id,
+        locationId: newlyCreatedMemory.location.id || `loc-${newlyCreatedMemory.id}`,
+        title: newlyCreatedMemory.title,
+        provinceName: newlyCreatedMemory.location.province?.name || "Việt Nam",
+        latitude: newlyCreatedMemory.location.latitude,
+        longitude: newlyCreatedMemory.location.longitude,
+        coverThumbnailUrl: newlyCreatedMemory.mediaList?.[0]?.downloadUrl || "",
+        coverStorageKey: newlyCreatedMemory.mediaList?.[0]?.storageKey || "",
+        visitedAt: newlyCreatedMemory.visitedAt,
+        visibility: newlyCreatedMemory.visibility,
+      };
+
+      queueMicrotask(() => {
+        setMapMode("maplibre");
+        setMapMarkers((prev) => [newMarker, ...prev.filter((m) => m.memoryId !== newMarker.memoryId)]);
+        setActiveVectorMarker(newMarker);
+        setFlyToCoords({
+          latitude: newlyCreatedMemory.location.latitude,
+          longitude: newlyCreatedMemory.location.longitude,
+          zoom: 12,
+        });
+      });
+    }
+  }, [newlyCreatedMemory]);
 
   // Load backend markers or fallback with request tracking to avoid race conditions
   const fetchMarkersInBounds = useCallback(async (bbox: BoundingBoxQuery) => {
@@ -393,6 +424,7 @@ export const MapShowcase: React.FC<MapShowcaseProps> = ({ onLocationSelect }) =>
                   selectedCoords={selectedCoords}
                   isPinMode={isPinMode}
                   onMarkerClick={handleMarkerClick}
+                  flyToCoords={flyToCoords}
                   className="w-full h-full"
                 />
               </div>

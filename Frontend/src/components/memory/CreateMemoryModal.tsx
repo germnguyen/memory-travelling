@@ -121,7 +121,7 @@ export const CreateMemoryModal: React.FC<CreateMemoryModalProps> = ({
     setErrorMessage(null);
 
     const newItems: SelectedMediaItem[] = [];
-    let detectedGpsAny = false;
+    let firstGpsFound = mediaItems.some((it) => it.hasGps);
 
     for (let i = 0; i < validImageFiles.length; i++) {
       const file = validImageFiles[i];
@@ -142,16 +142,18 @@ export const CreateMemoryModal: React.FC<CreateMemoryModalProps> = ({
         const metadata = await extractGpsFromImage(file);
         if (metadata && typeof metadata.lat === "number" && typeof metadata.lng === "number") {
           hasGps = true;
-          detectedGpsAny = true;
 
-          // Auto-fill latitude and longitude from first GPS-tagged photo
-          setLatitude(metadata.lat.toFixed(6));
-          setLongitude(metadata.lng.toFixed(6));
+          // Auto-fill latitude and longitude from first GPS-tagged photo only
+          if (!firstGpsFound) {
+            firstGpsFound = true;
+            setLatitude(metadata.lat.toFixed(6));
+            setLongitude(metadata.lng.toFixed(6));
 
-          // If photo has takenAt date, format to YYYY-MM-DD and autofill visitedAt
-          if (metadata.takenAt && !isNaN(metadata.takenAt.getTime())) {
-            const dateStr = metadata.takenAt.toISOString().split("T")[0];
-            setVisitedAt(dateStr);
+            if (metadata.takenAt && !isNaN(metadata.takenAt.getTime())) {
+              const dateStr = metadata.takenAt.toISOString().split("T")[0];
+              setVisitedAt(dateStr);
+            }
+            setGpsExtractionStatus("found");
           }
         }
       } catch (err) {
@@ -167,7 +169,9 @@ export const CreateMemoryModal: React.FC<CreateMemoryModalProps> = ({
     }
 
     setMediaItems((prev) => [...prev, ...newItems]);
-    setGpsExtractionStatus(detectedGpsAny ? "found" : "not_found");
+    if (!firstGpsFound) {
+      setGpsExtractionStatus("not_found");
+    }
     setIsProcessingMedia(false);
   };
 
@@ -279,7 +283,7 @@ export const CreateMemoryModal: React.FC<CreateMemoryModalProps> = ({
           file,
           file.type || "image/jpeg",
           (percent) => {
-            const overall = Math.round(((i + percent / 100) / (mediaItems.length * 2)) * 100);
+            const overall = Math.round(((i * 2 + percent / 100) / (mediaItems.length * 2)) * 85);
             setUploadProgress(overall);
           }
         );
@@ -303,6 +307,7 @@ export const CreateMemoryModal: React.FC<CreateMemoryModalProps> = ({
           );
 
           thumbnailKey = thumbPresigned.storageKey;
+          setUploadProgress(Math.round(((i * 2 + 2) / (mediaItems.length * 2)) * 85));
         } catch (thumbErr) {
           console.warn("Thumbnail upload skipped due to error:", thumbErr);
         }
@@ -320,6 +325,7 @@ export const CreateMemoryModal: React.FC<CreateMemoryModalProps> = ({
 
       // 4. Submit memory payload to Backend API
       setStatusMessage("Đang lưu thông tin kỷ niệm...");
+      setUploadProgress(92);
       const createdMemory = await memoryService.createMemory({
         title: title.trim(),
         description: description.trim() || undefined,
@@ -332,6 +338,7 @@ export const CreateMemoryModal: React.FC<CreateMemoryModalProps> = ({
       });
 
       setStatusMessage("Tạo kỷ niệm thành công!");
+      setUploadProgress(100);
       if (onSuccess) {
         onSuccess(createdMemory);
       }
@@ -628,6 +635,19 @@ export const CreateMemoryModal: React.FC<CreateMemoryModalProps> = ({
                 )}
               </div>
             </div>
+
+            {/* Coordinate Preview & Mini-map Pill */}
+            {latitude && longitude && !isNaN(parseFloat(latitude)) && !isNaN(parseFloat(longitude)) && (
+              <div className="rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 flex items-center justify-between text-xs text-white/70">
+                <span className="flex items-center gap-2 font-medium">
+                  <span className="text-[#ff4d1a]">📍</span>
+                  <span>Ghim toạ độ: [{parseFloat(latitude).toFixed(4)}, {parseFloat(longitude).toFixed(4)}]</span>
+                </span>
+                <span className="text-[11px] text-white/50 bg-white/10 px-2 py-0.5 rounded-full font-mono">
+                  WGS84
+                </span>
+              </div>
+            )}
 
             {/* Visibility Mode Selector */}
             <div>

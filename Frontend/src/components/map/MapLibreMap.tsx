@@ -27,6 +27,7 @@ export interface MapLibreMapProps {
   isPinMode?: boolean;
   className?: string;
   onMarkerClick?: (marker: MemoryMapMarkerResponse) => void;
+  flyToCoords?: { latitude: number; longitude: number; zoom?: number } | null;
 }
 
 // Vietnam Center and Bounds
@@ -90,6 +91,7 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
   isPinMode = false,
   className = "w-full h-full min-h-[460px]",
   onMarkerClick,
+  flyToCoords,
 }) => {
   const effectiveMarkers = markers ?? initialMarkers;
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -102,6 +104,18 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
   const [mapZoom, setMapZoom] = useState<number>(VIETNAM_ZOOM);
   const [mapBounds, setMapBounds] = useState<[number, number, number, number] | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+
+  // Smooth camera navigation when flyToCoords changes
+  useEffect(() => {
+    if (flyToCoords && mapRef.current) {
+      mapRef.current.flyTo({
+        center: [flyToCoords.longitude, flyToCoords.latitude],
+        zoom: flyToCoords.zoom ?? 12,
+        duration: 1500,
+        essential: true,
+      });
+    }
+  }, [flyToCoords]);
 
   // Client-side clustering with Supercluster
   const { clusters, getClusterExpansionZoom } = useMapCluster(
