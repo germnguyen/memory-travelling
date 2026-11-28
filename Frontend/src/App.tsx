@@ -136,7 +136,7 @@ const MainLayout: React.FC = () => {
       {/* Floating Pill Navigation */}
       <Navbar
         onReplayIntro={handleReplayIntro}
-        onOpenCreateMemory={() => setIsCreateModalOpen(true)}
+        onOpenCreateMemoryModal={() => setIsCreateModalOpen(true)}
       />
 
       {/* Main Content */}
@@ -154,7 +154,7 @@ const MainLayout: React.FC = () => {
 
         {/* Vietnam Map Showcase */}
         <MapShowcase
-          onLocationSelect={(coords) => {
+          onLocationSelect={(coords: { latitude: number; longitude: number }) => {
             setSelectedCoords(coords);
             setIsCreateModalOpen(true);
           }}

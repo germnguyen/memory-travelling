@@ -539,7 +539,9 @@ export const MapShowcase: React.FC<MapShowcaseProps> = ({ onLocationSelect }) =>
                   onClick={() => {
                     const lat = selectedCoords?.latitude ?? activeVectorMarker.latitude;
                     const lng = selectedCoords?.longitude ?? activeVectorMarker.longitude;
-                    alert(`Mở tạo kỷ niệm tại toạ độ [${lat.toFixed(4)}, ${lng.toFixed(4)}]`);
+                    if (onLocationSelect) {
+                      onLocationSelect({ latitude: lat, longitude: lng });
+                    }
                   }}
                   className="inline-flex items-center gap-1.5 rounded-full bg-neutral-900 px-5 py-2.5 text-xs font-bold text-white transition hover:bg-neutral-800 active:scale-[0.98]"
                 >
